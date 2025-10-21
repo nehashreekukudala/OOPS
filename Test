@@ -1,0 +1,68 @@
+-- Create database
+CREATE DATABASE IF NOT EXISTS event_management_system;
+USE event_management_system;
+
+-- Users table
+CREATE TABLE users (
+    user_id VARCHAR(20) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('Organizer', 'Attendee') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Venues table
+CREATE TABLE venues (
+    venue_id VARCHAR(20) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    location VARCHAR(255) NOT NULL,
+    capacity INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Events table
+CREATE TABLE events (
+    event_id VARCHAR(20) PRIMARY KEY,
+    name VARCHAR(200) NOT NULL,
+    description TEXT,
+    date DATE NOT NULL,
+    time TIME NOT NULL,
+    venue_id VARCHAR(20),
+    organizer_id VARCHAR(20),
+    ticket_price DECIMAL(10,2) NOT NULL,
+    total_tickets INT NOT NULL,
+    available_tickets INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (venue_id) REFERENCES venues(venue_id),
+    FOREIGN KEY (organizer_id) REFERENCES users(user_id)
+);
+
+-- Tickets table
+CREATE TABLE tickets (
+    ticket_id VARCHAR(20) PRIMARY KEY,
+    event_id VARCHAR(20),
+    attendee_id VARCHAR(20),
+    ticket_type ENUM('Digital', 'Physical') NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    is_booked BOOLEAN DEFAULT FALSE,
+    is_used BOOLEAN DEFAULT FALSE,
+    qr_code VARCHAR(255),
+    serial_number VARCHAR(50),
+    check_in_time TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (event_id) REFERENCES events(event_id),
+    FOREIGN KEY (attendee_id) REFERENCES users(user_id)
+);
+
+-- Check-ins table for audit
+CREATE TABLE check_ins (
+    check_in_id INT AUTO_INCREMENT PRIMARY KEY,
+    ticket_id VARCHAR(20),
+    check_in_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    verifier_id VARCHAR(20),
+    status ENUM('Success', 'Failed') NOT NULL,
+    reason VARCHAR(255),
+    FOREIGN KEY (ticket_id) REFERENCES tickets(ticket_id),
+    FOREIGN KEY (verifier_id) REFERENCES users(user_id)
+);
